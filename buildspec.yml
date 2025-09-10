@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+  build:
+    commands:
+      # Run Maven to compile, test, and perform the SonarCloud analysis
+      - >
+        mvn verify sonar:sonar 
+        -Dsonar.projectKey=${SONAR_PROJECTKEY} 
+        -Dsonar.organization=${SONAR_ORGANIZATION} 
+        -Dsonar.host.url=https://sonarcloud.io 
+        -Dsonar.login=${SONAR_TOKEN}
+
+env:
+  parameter-store:
+    SONAR_TOKEN: "SONAR_TOKEN"
+    SONAR_ORGANIZATION: "SONAR_ORGANIZATION"
+    SONAR_PROJECTKEY: "SONAR_PROJECTKEY"
