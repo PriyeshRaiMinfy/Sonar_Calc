@@ -131,7 +131,22 @@
                 <configuration>
                     <targetJdk>17</targetJdk>
                     <includeTests>false</includeTests>
+                    <failOnViolation>false</failOnViolation> 
+                    <rulesets>
+                        <ruleset>/category/java/bestpractices.xml</ruleset>
+                        <ruleset>/category/java/codestyle.xml</ruleset>
+                        <ruleset>/category/java/design.xml</ruleset>
+                        <ruleset>/category/java/errorprone.xml</ruleset>
+                        <ruleset>/category/java/performance.xml</ruleset>
+                    </rulesets>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             
             <!-- Checkstyle Plugin for coding standards -->
