@@ -51,3 +51,4 @@ phases:
 artifacts:
   files:
     - reports/**/*
+    - target/*.jar     #exporting JAR file for deployment
