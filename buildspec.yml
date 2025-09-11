@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   variables:
-    S3_BUCKET: "my-devops-sonarless-reports"
-    PROJECT_KEY: "sample-project"
+    S3_BUCKET: "my-devops-sonarless-reports"  # ✅ Your S3 bucket name
+    PROJECT_KEY: "sample-project"             # ✅ Set to your repo/project name
 
 phases:
   install:
@@ -13,16 +13,14 @@ phases:
       - echo "Installing Sonar Scanner..."
       - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip -q sonar-scanner.zip -d /opt
-      # Corrected wildcard to include '-cli'
-      - export PATH=$PATH:/opt/sonar-scanner-cli-*/bin && sonar-scanner --version
+      # Use full path to avoid wildcard issues
+      - /opt/sonar-scanner-cli-5.0.1.3006-linux/bin/sonar-scanner --version
 
   build:
     commands:
       - echo "Running Sonarless scan..."
-      # Corrected wildcard to include '-cli'
       - |
-        export PATH=$PATH:/opt/sonar-scanner-cli-*/bin && \
-        sonar-scanner \
+        /opt/sonar-scanner-cli-5.0.1.3006-linux/bin/sonar-scanner \
           -Dsonar.projectKey=$PROJECT_KEY \
           -Dsonar.sources=. \
           -Dsonar.host.url=http://dummy \
