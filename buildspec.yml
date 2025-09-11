@@ -9,31 +9,37 @@ phases:
   install:
     runtime-versions:
       java: corretto17
-    commands:
-      - echo "Installing Sonar Scanner..."
-      - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip -q sonar-scanner.zip -d /opt
-      - /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner --version
 
   build:
     commands:
-      - echo "Running Sonarless offline scan..."
-      - |
-        /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-          -Dsonar.projectKey=$PROJECT_KEY \
-          -Dsonar.sources=. \
-          -Dsonar.offline=true \
-          -Dsonar.issuesReport.html.enable=true \
-          -Dsonar.issuesReport.console.enable=true
-      - echo "Collecting reports..."
+      - echo "Running Maven build with static analysis..."
+      # Compile and run multiple analysis tools
+      - mvn clean compile
+      - mvn pmd:pmd checkstyle:checkstyle spotbugs:spotbugs site:site
+      
+      - echo "Collecting analysis reports..."
       - mkdir -p reports
-      - cp -r .scannerwork/issues-report/* reports/ || echo "No reports generated, skipping copy"
+      
+      # Copy various analysis reports
+      - cp target/site/pmd.html reports/ || echo "No PMD report"
+      - cp target/site/checkstyle.html reports/ || echo "No Checkstyle report"  
+      - cp target/site/spotbugs.html reports/ || echo "No SpotBugs report"
+      - cp -r target/site/css reports/ || echo "No CSS files"
+      - cp -r target/site/images reports/ || echo "No image files"
+      
+      # Create an index page
+      - echo '<html><body><h1>Static Analysis Reports</h1>' > reports/index.html
+      - echo '<ul>' >> reports/index.html
+      - echo '<li><a href="pmd.html">PMD Report</a></li>' >> reports/index.html
+      - echo '<li><a href="checkstyle.html">Checkstyle Report</a></li>' >> reports/index.html
+      - echo '<li><a href="spotbugs.html">SpotBugs Report</a></li>' >> reports/index.html
+      - echo '</ul></body></html>' >> reports/index.html
 
   post_build:
     commands:
       - echo "Uploading reports to S3..."
-      - aws s3 cp reports/ s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
-      - echo "Reports uploaded successfully to s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/"
+      - aws s3 cp reports/ s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/ --recursive
+      - echo "Reports uploaded to s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/"
 
 artifacts:
   files:
