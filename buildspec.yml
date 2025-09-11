@@ -17,27 +17,24 @@ phases:
 
   build:
     commands:
-      - echo "Running Sonarless scan..."
+      - echo "Running Sonarless offline scan..."
       - |
         /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
           -Dsonar.projectKey=$PROJECT_KEY \
           -Dsonar.sources=. \
-          -Dsonar.host.url=http://localhost \
-          -Dsonar.login=dummyToken \
           -Dsonar.offline=true \
           -Dsonar.issuesReport.html.enable=true \
           -Dsonar.issuesReport.console.enable=true
       - echo "Collecting reports..."
       - mkdir -p reports
-      - cp -r .scannerwork/issues-report/* reports/ 2>/dev/null || true
+      - cp -r .scannerwork/issues-report/* reports/ || echo "No reports generated, skipping copy"
 
   post_build:
     commands:
       - echo "Uploading reports to S3..."
-      - mkdir -p reports  # ensure folder exists
       - aws s3 cp reports/ s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
       - echo "Reports uploaded successfully to s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/"
 
 artifacts:
   files:
-    - reports/**/
+    - reports/**/*
