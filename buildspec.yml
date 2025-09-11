@@ -13,15 +13,15 @@ phases:
       - echo "Installing Sonar Scanner..."
       - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip -q sonar-scanner.zip -d /opt
-      # Chain the export and version check together
-      - export PATH=$PATH:/opt/sonar-scanner-*/bin && sonar-scanner --version
+      # Corrected wildcard to include '-cli'
+      - export PATH=$PATH:/opt/sonar-scanner-cli-*/bin && sonar-scanner --version
 
   build:
     commands:
       - echo "Running Sonarless scan..."
-      # Chain the export with the main scanner command
+      # Corrected wildcard to include '-cli'
       - |
-        export PATH=$PATH:/opt/sonar-scanner-*/bin && \
+        export PATH=$PATH:/opt/sonar-scanner-cli-*/bin && \
         sonar-scanner \
           -Dsonar.projectKey=$PROJECT_KEY \
           -Dsonar.sources=. \
