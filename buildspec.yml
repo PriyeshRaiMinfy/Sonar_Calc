@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     S3_BUCKET: "my-devops-sonarless-reports"
-    PROJECT_KEY: "java-calc"
 
 phases:
   install:
@@ -12,44 +11,23 @@ phases:
 
   build:
     commands:
-      - echo "Running Maven build..."
-      # Build JAR with fixed name java-calc-1.0.0.jar
-      - mvn clean package -DskipTests
-      - mvn pmd:pmd -Dmaven.pmd.failOnViolation=false || echo "PMD done"
-      - mvn checkstyle:checkstyle -Dmaven.checkstyle.failOnViolation=false || echo "Checkstyle done"
-      - mvn spotbugs:spotbugs -Dspotbugs.failOnError=false || echo "SpotBugs done"
-      - mvn site || echo "Site generation done"
-      - mkdir -p reports
-      - cp -r target/site/* reports/ 2>/dev/null || echo "No site reports"
-      - cp target/pmd.xml reports/pmd-report.xml 2>/dev/null || echo "No PMD XML"
-      - cp target/checkstyle-result.xml reports/checkstyle-report.xml 2>/dev/null || echo "No Checkstyle XML"
-      - cp target/spotbugsXml.xml reports/spotbugs-report.xml 2>/dev/null || echo "No SpotBugs XML"
-      - |
-        cat > reports/index.html << EOF
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Static Analysis Reports</title>
-        </head>
-        <body>
-          <h1>Static Analysis Reports</h1>
-          <ul>
-            <li><a href="pmd.html">PMD Report</a></li>
-            <li><a href="checkstyle.html">Checkstyle Report</a></li>
-            <li><a href="spotbugs.html">SpotBugs Report</a></li>
-          </ul>
-        </body>
-        </html>
-        EOF
-      - echo "Reports prepared!"
+      # This single command compiles, packages, runs checks, and generates reports
+      # based on the pom.xml configuration.
+      - echo "Running Maven build and site generation..."
+      - mvn clean install site
 
   post_build:
     commands:
+      # The generated reports are already in the target/site directory
       - echo "Uploading reports to S3..."
-      - aws s3 cp reports/ s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/ --recursive
-      - echo "Reports uploaded to S3"
+      - aws s3 cp target/site/ s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/ --recursive
+      - echo "Reports uploaded successfully!"
 
 artifacts:
   files:
-    - reports/**/*
-    - target/java-calc-1.0.0.jar   # exporting JAR for deployment
+    # This includes the reports for the pipeline artifact store
+    - 'target/site/**/*'
+    # This is the application JAR for the CodeDeploy stage
+    - 'target/java-calc-1.0.0.jar'
+    - 'appspec.yml'
+    - 'scripts/start_server.sh'
