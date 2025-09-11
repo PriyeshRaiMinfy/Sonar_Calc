@@ -9,33 +9,26 @@ phases:
   install:
     runtime-versions:
       java: corretto17
-  
+      
   build:
     commands:
       - echo "Running Maven build with static analysis..."
-      
       # Clean and compile the project
       - mvn clean compile
-      
       # Run individual analysis tools (don't fail on warnings)
       - mvn pmd:pmd -Dmaven.pmd.failOnViolation=false || echo "PMD completed"
       - mvn checkstyle:checkstyle -Dmaven.checkstyle.failOnViolation=false || echo "Checkstyle completed"
       - mvn spotbugs:spotbugs -Dspotbugs.failOnError=false || echo "SpotBugs completed"
-      
       # Generate the site with all reports
       - mvn site || echo "Site generation completed"
-      
       - echo "Collecting analysis reports..."
       - mkdir -p reports
-      
       # Copy Maven site reports (these will have better formatting)
       - cp -r target/site/* reports/ 2>/dev/null || echo "No site directory found"
-      
       # Copy individual report files as backup
       - cp target/pmd.xml reports/pmd-report.xml 2>/dev/null || echo "No PMD XML report"
       - cp target/checkstyle-result.xml reports/checkstyle-report.xml 2>/dev/null || echo "No Checkstyle XML report"
       - cp target/spotbugsXml.xml reports/spotbugs-report.xml 2>/dev/null || echo "No SpotBugs XML report"
-      
       # Create a custom index page
       - |
         cat > reports/index.html << 'EOF'
@@ -71,7 +64,6 @@ phases:
                     Static code analysis results for the Java Calculator project. 
                     These reports help identify potential bugs, code quality issues, and style violations.
                 </div>
-                
                 <div class="report-section">
                     <div class="report-title">🔍 Code Analysis Reports:</div>
                     <ul>
@@ -80,7 +72,6 @@ phases:
                         <li><a href="spotbugs.html">SpotBugs Report - Bug Pattern Detection</a></li>
                     </ul>
                 </div>
-                
                 <div class="report-section">
                     <div class="report-title">📋 Project Information:</div>
                     <ul>
@@ -88,7 +79,6 @@ phases:
                         <li><a href="dependencies.html">Dependencies Report</a></li>
                     </ul>
                 </div>
-                
                 <div class="report-section">
                     <div class="report-title">🗂️ Raw XML Reports (for CI/CD integration):</div>
                     <ul>
@@ -101,10 +91,9 @@ phases:
         </body>
         </html>
         EOF
-      
       - echo "Reports prepared successfully!"
       - ls -la reports/
-  
+      
   post_build:
     commands:
       - echo "Uploading reports to S3..."
