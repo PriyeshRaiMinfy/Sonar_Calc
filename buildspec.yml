@@ -13,7 +13,8 @@ phases:
   build:
     commands:
       - echo "Running Maven build..."
-      - mvn clean compile
+      # Build JAR with fixed name java-calc-1.0.0.jar
+      - mvn clean package -DskipTests
       - mvn pmd:pmd -Dmaven.pmd.failOnViolation=false || echo "PMD done"
       - mvn checkstyle:checkstyle -Dmaven.checkstyle.failOnViolation=false || echo "Checkstyle done"
       - mvn spotbugs:spotbugs -Dspotbugs.failOnError=false || echo "SpotBugs done"
@@ -51,4 +52,4 @@ phases:
 artifacts:
   files:
     - reports/**/*
-    - target/*.jar     #exporting JAR file for deploymen
+    - target/java-calc-1.0.0.jar   # exporting JAR for deployment

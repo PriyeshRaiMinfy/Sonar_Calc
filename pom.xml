@@ -31,6 +31,7 @@
     
     <!-- Build Configuration -->
     <build>
+    <finalName>java-calc-1.0.0</finalName>
         <plugins>
             <!-- Maven Compiler Plugin -->
             <plugin>

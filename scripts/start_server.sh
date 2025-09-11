@@ -1,8 +1,9 @@
 #!/bin/bash
+# Navigate to app directory
 cd /home/ec2-user/app
 
-# Kill old process if running
-pkill -f 'JavaCalculator-1.0-SNAPSHOT.jar' || true
+# Kill any existing Java process
+pkill -f 'java -jar' || true
 
-# Start new process
-nohup java -jar JavaCalculator-1.0-SNAPSHOT.jar > app.log 2>&1 &
+# Start the new JAR in background
+nohup java -jar java-calc-1.0.0.jar > app.log 2>&1 &

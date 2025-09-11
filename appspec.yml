@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: target/JavaCalculator-1.0-SNAPSHOT.jar
+  - source: target/java-calc-1.0.0.jar
     destination: /home/ec2-user/app
   - source: scripts/start_server.sh
     destination: /home/ec2-user/app/scripts
