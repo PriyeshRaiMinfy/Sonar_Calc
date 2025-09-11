@@ -13,23 +13,17 @@ phases:
   build:
     commands:
       - echo "Running Maven build with static analysis..."
-      # Clean and compile the project
       - mvn clean compile
-      # Run individual analysis tools (don't fail on warnings)
       - mvn pmd:pmd -Dmaven.pmd.failOnViolation=false || echo "PMD completed"
       - mvn checkstyle:checkstyle -Dmaven.checkstyle.failOnViolation=false || echo "Checkstyle completed"
       - mvn spotbugs:spotbugs -Dspotbugs.failOnError=false || echo "SpotBugs completed"
-      # Generate the site with all reports
       - mvn site || echo "Site generation completed"
       - echo "Collecting analysis reports..."
       - mkdir -p reports
-      # Copy Maven site reports (these will have better formatting)
       - cp -r target/site/* reports/ 2>/dev/null || echo "No site directory found"
-      # Copy individual report files as backup
       - cp target/pmd.xml reports/pmd-report.xml 2>/dev/null || echo "No PMD XML report"
       - cp target/checkstyle-result.xml reports/checkstyle-report.xml 2>/dev/null || echo "No Checkstyle XML report"
       - cp target/spotbugsXml.xml reports/spotbugs-report.xml 2>/dev/null || echo "No SpotBugs XML report"
-      # Create a custom index page
       - |
         cat > reports/index.html << 'EOF'
         <!DOCTYPE html>
