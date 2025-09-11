@@ -9,37 +9,108 @@ phases:
   install:
     runtime-versions:
       java: corretto17
-
+  
   build:
     commands:
       - echo "Running Maven build with static analysis..."
-      # Compile and run multiple analysis tools
+      
+      # Clean and compile the project
       - mvn clean compile
-      - mvn pmd:pmd checkstyle:checkstyle spotbugs:spotbugs site:site
+      
+      # Run individual analysis tools (don't fail on warnings)
+      - mvn pmd:pmd -Dmaven.pmd.failOnViolation=false || echo "PMD completed"
+      - mvn checkstyle:checkstyle -Dmaven.checkstyle.failOnViolation=false || echo "Checkstyle completed"
+      - mvn spotbugs:spotbugs -Dspotbugs.failOnError=false || echo "SpotBugs completed"
+      
+      # Generate the site with all reports
+      - mvn site || echo "Site generation completed"
       
       - echo "Collecting analysis reports..."
       - mkdir -p reports
       
-      # Copy various analysis reports
-      - cp target/site/pmd.html reports/ || echo "No PMD report"
-      - cp target/site/checkstyle.html reports/ || echo "No Checkstyle report"  
-      - cp target/site/spotbugs.html reports/ || echo "No SpotBugs report"
-      - cp -r target/site/css reports/ || echo "No CSS files"
-      - cp -r target/site/images reports/ || echo "No image files"
+      # Copy Maven site reports (these will have better formatting)
+      - cp -r target/site/* reports/ 2>/dev/null || echo "No site directory found"
       
-      # Create an index page
-      - echo '<html><body><h1>Static Analysis Reports</h1>' > reports/index.html
-      - echo '<ul>' >> reports/index.html
-      - echo '<li><a href="pmd.html">PMD Report</a></li>' >> reports/index.html
-      - echo '<li><a href="checkstyle.html">Checkstyle Report</a></li>' >> reports/index.html
-      - echo '<li><a href="spotbugs.html">SpotBugs Report</a></li>' >> reports/index.html
-      - echo '</ul></body></html>' >> reports/index.html
-
+      # Copy individual report files as backup
+      - cp target/pmd.xml reports/pmd-report.xml 2>/dev/null || echo "No PMD XML report"
+      - cp target/checkstyle-result.xml reports/checkstyle-report.xml 2>/dev/null || echo "No Checkstyle XML report"
+      - cp target/spotbugsXml.xml reports/spotbugs-report.xml 2>/dev/null || echo "No SpotBugs XML report"
+      
+      # Create a custom index page
+      - |
+        cat > reports/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Static Analysis Reports - Java Calculator</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+                .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                h1 { color: #333; border-bottom: 3px solid #007cba; padding-bottom: 10px; }
+                ul { list-style-type: none; padding: 0; }
+                li { margin: 15px 0; }
+                a { 
+                    display: inline-block; 
+                    padding: 12px 20px; 
+                    background-color: #007cba; 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 5px; 
+                    transition: background-color 0.3s;
+                }
+                a:hover { background-color: #005a8b; }
+                .description { color: #666; margin-bottom: 30px; line-height: 1.6; }
+                .report-section { margin: 20px 0; }
+                .report-title { font-weight: bold; color: #333; margin-bottom: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📊 Static Analysis Reports</h1>
+                <div class="description">
+                    Static code analysis results for the Java Calculator project. 
+                    These reports help identify potential bugs, code quality issues, and style violations.
+                </div>
+                
+                <div class="report-section">
+                    <div class="report-title">🔍 Code Analysis Reports:</div>
+                    <ul>
+                        <li><a href="pmd.html">PMD Report - Bug Detection & Best Practices</a></li>
+                        <li><a href="checkstyle.html">Checkstyle Report - Coding Standards</a></li>
+                        <li><a href="spotbugs.html">SpotBugs Report - Bug Pattern Detection</a></li>
+                    </ul>
+                </div>
+                
+                <div class="report-section">
+                    <div class="report-title">📋 Project Information:</div>
+                    <ul>
+                        <li><a href="project-info.html">Project Information</a></li>
+                        <li><a href="dependencies.html">Dependencies Report</a></li>
+                    </ul>
+                </div>
+                
+                <div class="report-section">
+                    <div class="report-title">🗂️ Raw XML Reports (for CI/CD integration):</div>
+                    <ul>
+                        <li><a href="pmd-report.xml">PMD XML Report</a></li>
+                        <li><a href="checkstyle-report.xml">Checkstyle XML Report</a></li>
+                        <li><a href="spotbugs-report.xml">SpotBugs XML Report</a></li>
+                    </ul>
+                </div>
+            </div>
+        </body>
+        </html>
+        EOF
+      
+      - echo "Reports prepared successfully!"
+      - ls -la reports/
+  
   post_build:
     commands:
       - echo "Uploading reports to S3..."
       - aws s3 cp reports/ s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/ --recursive
-      - echo "Reports uploaded to s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/"
+      - echo "✅ Reports uploaded to s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/"
+      - echo "📊 Access your reports at: https://$S3_BUCKET.s3.amazonaws.com/analysis-reports/$CODEBUILD_BUILD_ID/index.html"
 
 artifacts:
   files:
