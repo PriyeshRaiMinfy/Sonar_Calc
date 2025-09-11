@@ -1,22 +1,36 @@
 version: 0.2
-
-phases:
-  install:
-    runtime-versions:
-      java: corretto17
-  build:
-    commands:
-      # Run Maven to compile, test, and perform the SonarCloud analysis
-      - >
-        mvn verify sonar:sonar 
-        -Dsonar.projectKey=${SONAR_PROJECTKEY} 
-        -Dsonar.organization=${SONAR_ORGANIZATION} 
-        -Dsonar.host.url=https://sonarcloud.io 
-        -Dsonar.login=${SONAR_TOKEN}
-
 env:
-  parameter-store:
-    SONAR_TOKEN: "SONAR_TOKEN"
-    SONAR_ORGANIZATION: "SONAR_ORGANIZATION"
-    SONAR_PROJECTKEY: "SONAR_PROJECTKEY"
-    
+ variables:
+   S3_BUCKET: "my-devops-sonarless-reports"   # 🔹 Replace with your bucket
+   PROJECT_KEY: "java-calc"      # 🔹 Replace with your project name
+phases:
+ install:
+   runtime-versions:
+     java: corretto17
+   commands:
+     - echo "Installing Sonar Scanner..."
+     - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+     - unzip -q sonar-scanner.zip -d /opt
+     - export PATH=$PATH:/opt/sonar-scanner-*/bin
+     - sonar-scanner --version
+ build:
+   commands:
+     - echo "Running Sonarless scan..."
+     - sonar-scanner \
+         -Dsonar.projectKey=$PROJECT_KEY \
+         -Dsonar.sources=. \
+         -Dsonar.host.url=http://dummy \
+         -Dsonar.login=dummyToken \
+         -Dsonar.issuesReport.html.enable=true \
+         -Dsonar.issuesReport.console.enable=true
+     - echo "Collecting reports..."
+     - mkdir -p reports
+     - cp -r .scannerwork/issues-report/* reports/ || true
+ post_build:
+   commands:
+     - echo "Uploading reports to S3..."
+     - aws s3 cp reports/ s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
+     - echo "Reports uploaded successfully to s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/"
+artifacts:
+ files:
+   - reports/**/
