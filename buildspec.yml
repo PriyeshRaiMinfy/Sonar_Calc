@@ -24,15 +24,17 @@ phases:
           -Dsonar.sources=. \
           -Dsonar.host.url=http://localhost \
           -Dsonar.login=dummyToken \
+          -Dsonar.offline=true \
           -Dsonar.issuesReport.html.enable=true \
           -Dsonar.issuesReport.console.enable=true
       - echo "Collecting reports..."
       - mkdir -p reports
-      - cp -r .scannerwork/issues-report/* reports/ || true
+      - cp -r .scannerwork/issues-report/* reports/ 2>/dev/null || true
 
   post_build:
     commands:
       - echo "Uploading reports to S3..."
+      - mkdir -p reports  # ensure folder exists
       - aws s3 cp reports/ s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
       - echo "Reports uploaded successfully to s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/"
 
