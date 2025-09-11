@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     S3_BUCKET: "my-devops-sonarless-reports"
-    PROJECT_KEY: "java-calc"
+    PROJECT_KEY: "sample-project"
 
 phases:
   install:
@@ -12,7 +12,20 @@ phases:
     commands:
       - echo "Installing Sonar Scanner..."
       - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip -q sonar-scanner.zip -d /opt
+      
+      # --- START DEBUG COMMANDS ---
+      - echo "Checking downloaded file..."
+      - ls -l sonar-scanner.zip
+      # --- END DEBUG COMMANDS ---
+      
+      # Unzipping verbosely (removed -q) and listing the contents of /opt
+      - unzip sonar-scanner.zip -d /opt
+      
+      # --- START DEBUG COMMANDS ---
+      - echo "Listing contents of /opt directory..."
+      - ls -laR /opt
+      # --- END DEBUG COMMANDS ---
+      
       - /opt/sonar-scanner-cli-5.0.1.3006-linux/bin/sonar-scanner --version
 
   build:
@@ -33,7 +46,7 @@ phases:
   post_build:
     commands:
       - echo "Uploading reports to S3..."
-      - aws s3 cp reports/ s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
+      - aws s3 cp reports/ s3://$S_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/ --recursive
       - echo "Reports uploaded successfully to s3://$S3_BUCKET/sonarless-reports/$CODEBUILD_BUILD_ID/"
 
 artifacts:
