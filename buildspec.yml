@@ -28,3 +28,90 @@ artifacts:
     - 'target/java-calc-1.0.0.jar'
     - 'appspec.yml'
     - 'scripts/**/*'
+# ---------------------------------------------------------------------
+
+# +-------------------------------------------------------------+
+# | Step 1: Build Starts                                        |
+# |                                                             |
+# |   AWS creates a temporary, clean virtual server for your    |
+# |   CodeBuild job. This server has a temporary file system.   |
+# |                                                             |
+# +-------------------------------------------------------------+
+#                          |
+#                          V
+# +-------------------------------------------------------------+
+# | Step 2: `mvn clean install site` runs                       |
+# |                                                             |
+# |   Inside the TEMPORARY CodeBuild server's file system:      |
+# |                                                             |
+# |   /codebuild/output/src12345/  (Your Project Folder)        |
+# |      |                                                      |
+# |      +-- pom.xml                                            |
+# |      +-- src/                                               |
+# |      +-- scripts/                                           |
+# |      +-- target/  <-- Maven creates this directory          |
+# |            |                                                |
+# |            +-- java-calc-1.0.0.jar                          |
+# |            +-- site/  <-- The `site` command creates this   |
+# |                  |                                          |
+# |                  +-- index.html                             |
+# |                  +-- pmd.html                               |
+# |                  +-- css/                                   |
+# |                  +-- ... (all your report files)            |
+# |                                                             |
+# +-------------------------------------------------------------+
+#                          |
+#                          V
+# +-------------------------------------------------------------+
+# | Step 3: `post_build` runs `aws s3 cp`                       |
+# |                                                             |
+# |   The command `aws s3 cp target/site/ s3://...` does this:  |
+# |                                                             |
+# |   "Take all the files INSIDE the `target/site` directory    |
+# |    and copy them TO the S3 path..."                         |
+# |                                                             |
+# +-------------------------------------------------------------+
+#                          |
+#                          V
+# +-------------------------------------------------------------+
+# | Step 4: Build Ends                                          |
+# |                                                             |
+# |   The CodeBuild job is finished.                            |
+# |   The ENTIRE temporary server, including its file system    |
+# |   and the `target/site` directory, is PERMANENTLY DELETED.  |
+# |   It no longer exists anywhere.                             |
+# +-------------------------------------------------------------+
+
+
+
+# +-------------------------------------------------------------+
+# |                     THE BUILD STAGE                         |
+# |           (Executes the `buildspec.yml` file)               |
+# +---------------------------+---------------------------------+
+#                             |
+#   +-------------------------+-------------------------+
+#   |                                                   |
+#   V                                                   V
+# [The `post_build` section runs]              [The `artifacts` section is processed]
+#   |                                                   |
+#   | `aws s3 cp target/site/ ...`                      | `files: - 'java-calc-1.0.0.jar'`
+#   |                                                   |        `- 'appspec.yml'`
+#   |                                                   |        `- 'scripts/**/*'`
+#   |                                                   |
+#   V                                                   V
+# +---------------------------+                      +------------------------------------+
+# |   Your S3 Bucket for      |                      |   The Pipeline's Hidden S3 Bucket  |
+# |         Reports           |                      |         (The Artifact Store)       |
+# +---------------------------+                      +------------------------------------+
+# |                           |                      |                                    |
+# | Bucket Name:              |                      | Bucket Name:                       |
+# | `my-devops-sonarless-reports`|                      | `codepipeline-ap-south-1-...`      |
+# |                           |                      |                                    |
+# | Contains:                 |                      | Contains:                          |
+# |  - index.html             |                      |  - A single .zip file (the         |
+# |  - pmd.html               |                      |    Build Artifact) containing      |
+# |  - checkstyle.html        |                      |    your JAR, appspec, & scripts.   |
+# |  - css/, js/, etc.        |                      |                                    |
+# |                           |                      |                                    |
+# | Purpose: For you to view. |                      | Purpose: For the Deploy Stage to use.|
+# +---------------------------+                      +------------------------------------+
