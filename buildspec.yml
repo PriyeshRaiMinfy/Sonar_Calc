@@ -11,14 +11,11 @@ phases:
 
   build:
     commands:
-      # This single command compiles, packages, runs checks, and generates reports
-      # based on the pom.xml configuration.
       - echo "Running Maven build and site generation..."
       - mvn clean install site
 
   post_build:
     commands:
-      # The generated reports are already in the target/site directory
       - echo "Uploading reports to S3..."
       - aws s3 cp target/site/ s3://$S3_BUCKET/analysis-reports/$CODEBUILD_BUILD_ID/ --recursive
       - echo "Reports uploaded successfully!"
@@ -30,4 +27,4 @@ artifacts:
     # This is the application JAR for the CodeDeploy stage
     - 'target/java-calc-1.0.0.jar'
     - 'appspec.yml'
-    - 'scripts/start_server.sh'
+    - 'scripts/**/*'
