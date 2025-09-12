@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+    
     <modelVersion>4.0.0</modelVersion>
-
+    
     <!-- Project Information -->
     <groupId>com.example</groupId>
     <artifactId>java-calc</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-
+    
     <name>Java Calculator</name>
     <description>Static Analysis Demo Project</description>
     <url>https://github.com/Priyesh-Rai-011/JavaCalculator</url>
 
-
+    
     <!-- Properties -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
+    
     <!-- Dependencies (if you have any) -->
     <dependencies>
         <!-- Add your project dependencies here if needed -->
     </dependencies>
-
+    
     <!-- Build Configuration -->
     <build>
-        <finalName>java-calc-1.0.0</finalName>
+    <finalName>java-calc-1.0.0</finalName>
         <plugins>
             <!-- Maven Compiler Plugin -->
             <plugin>
@@ -43,15 +43,32 @@
                     <target>17</target>
                 </configuration>
             </plugin>
-
+            
+            <!-- **************************************** -->
+            <!-- *** THIS IS THE NEW PLUGIN TO FIX THE ERROR *** -->
+            <!-- **************************************** -->
+            <!-- Maven JAR Plugin to create an executable JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.example.calculator.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
             <!-- Maven Site Plugin for generating HTML reports -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>4.0.0-M9</version>
             </plugin>
-
-            <!-- PMD Plugin for bug detection (for build execution) -->
+            
+            <!-- PMD Plugin for bug detection -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -76,8 +93,8 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- Checkstyle Plugin for coding standards (for build execution) -->
+            
+            <!-- Checkstyle Plugin for coding standards -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -99,8 +116,8 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- SpotBugs Plugin for finding bugs (for build execution) -->
+            
+            <!-- SpotBugs Plugin for finding bugs -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
@@ -120,11 +137,11 @@
             </plugin>
         </plugins>
     </build>
-
-    <!-- Reporting Configuration (for mvn site) -->
+    
+    <!-- Reporting Configuration -->
     <reporting>
         <plugins>
-            <!-- PMD Plugin Report -->
+            <!-- PMD Plugin for bug detection -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -134,8 +151,8 @@
                     <includeTests>false</includeTests>
                 </configuration>
             </plugin>
-
-            <!-- Checkstyle Plugin Report -->
+            
+            <!-- Checkstyle Plugin for coding standards -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -144,14 +161,14 @@
                     <configLocation>google_checks.xml</configLocation>
                 </configuration>
             </plugin>
-
-            <!-- SpotBugs Plugin Report -->
+            
+            <!-- SpotBugs Plugin for finding bugs -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.7.3.6</version>
             </plugin>
-
+            
             <!-- Project Info Reports -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -160,5 +177,5 @@
             </plugin>
         </plugins>
     </reporting>
-
+    
 </project>
